@@ -1,6 +1,11 @@
 #include <stdio.h>
 // code by fre3vil
 // Mac => gcc stackDemo.c -fno-pie -o stackDemo
+// linux 32 => gcc stackDemo.c -m32 -no-pie -o stackDemoy32
+// linux 64 => gcc stackDemo.c -no-pie -o stackDemoy64
+
+
+
 void func1()
 {
     int x = 1;
