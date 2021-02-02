@@ -10,6 +10,11 @@ _start:
     mov rdx, length
     syscall
 
+    mov rax, 60
+    mov rdi, 1
+    syscall
+
+
 section .data
 
     hello_world: db 'hello world', 0xa
