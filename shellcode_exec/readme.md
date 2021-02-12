@@ -25,3 +25,16 @@ $ nasm -felf64 control_flow.nasm -o control_flow.o
 $ ld control_flow.o -o control_flow
 
 ```
+
+#### set_carry_flag
+set carry flag (CF) can use stc 
+```
+$ nasm -felf64 set_carry_flag.nasm -o set_carry_flag.o
+$ ld set_carry_flag.o -o set_carry_flag
+
+```
+#### set_zero_flag
+```
+$ nasm -felf64 set_zero_flag.nasm -o set_zero_flag.o
+$ ld set_zero_flag.o -o set_zero_flag
+```
