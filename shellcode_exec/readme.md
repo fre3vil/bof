@@ -38,3 +38,35 @@ $ ld set_carry_flag.o -o set_carry_flag
 $ nasm -felf64 set_zero_flag.nasm -o set_zero_flag.o
 $ ld set_zero_flag.o -o set_zero_flag
 ```
+
+
+#### use_call
+```
+$ nasm -felf64 use_call.nasm -o use_call.o
+$ ld use_call.o -o use_call
+```
+
+#### sal
+```
+$ nasm -felf64 sal.nasm -o sal.o
+$ ld sal.o -o sal
+```
+
+
+#### shift
+```
+$ nasm -felf64 shift.nasm -o shift.o
+$ ld shift.o -o shift
+```
+
+#### ror rotate right
+```
+$ nasm -felf64 ror.nasm -o ror.o
+$ ld ror.o -o ror
+```
+
+#### rol rotate left
+```
+$ nasm -felf64 rol.nasm -o rol.o
+$ ld rol.o -o rol
+```
